@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易聊天室</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+        }
+        
+        header {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .chat-area {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .users-panel {
+            width: 200px;
+            background-color: #f5f7fa;
+            padding: 15px;
+            border-right: 1px solid #e1e4e8;
+            overflow-y: auto;
+        }
+        
+        .users-panel h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #6a11cb;
+            padding-bottom: 5px;
+        }
+        
+        #users-list {
+            list-style: none;
+        }
+        
+        #users-list li {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background-color: white;
+            border-radius: 18px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+        }
+        
+        #users-list li::before {
+            content: "•";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .my-message {
+            background-color: #dcf8c6;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .other-message {
+            background-color: #f0f0f0;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #6a11cb;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        .input-area {
+            display: flex;
+            padding: 15px;
+            background-color: #f5f7fa;
+            border-top: 1px solid #e1e4e8;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #d1d9e0;
+            border-radius: 24px;
+            outline: none;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+        
+        #send-button {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            transition: transform 0.2s, background 0.3s;
+        }
+        
+        #send-button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(to right, #5a0db4, #1c65e0);
+        }
+        
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .login-box h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        #username-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d9e0;
+            border-radius: 24px;
+            outline: none;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        
+        #join-button {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s, background 0.3s;
+        }
+        
+        #join-button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(to right, #5a0db4, #1c65e0);
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1001;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .deployment-guide {
+            max-width: 900px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .deployment-guide h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #6a11cb;
+            padding-bottom: 10px;
+        }
+        
+        .step {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f5f7fa;
+            border-radius: 10px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-area {
+                flex-direction: column;
+            }
+            
+            .users-panel {
+                width: 100%;
+                max-height: 150px;
+                border-right: none;
+                border-bottom: 1px solid #e1e4e8;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <i class="fas fa-comments"></i> 简易聊天室
+        </header>
+        
+        <div class="chat-area">
+            <div class="users-panel">
+                <h3>在线用户</h3>
+                <ul id="users-list">
+                    <!-- 用户列表将在这里动态生成 -->
+                </ul>
+            </div>
+            
+            <div class="chat-main">
+                <div id="messages">
+                    <!-- 消息将在这里动态生成 -->
+                    <div class="message other-message">
+                        <div class="message-sender">系统</div>
+                        <div class="message-text">欢迎来到聊天室！请输入昵称开始聊天。</div>
+                        <div class="message-time">刚刚</div>
+                    </div>
+                </div>
+                
+                <div class="input-area">
+                    <input type="text" id="message-input" placeholder="输入消息..." disabled>
+                    <button id="send-button" disabled><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <h2>加入聊天室</h2>
+            <input type="text" id="username-input" placeholder="输入你的昵称">
+            <button id="join-button">加入聊天</button>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">这是一条通知</div>
+
+    <div class="deployment-guide">
+        <h2>部署指南</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>保存HTML文件</strong>: 将此文件保存为index.html
+        </div>
+        
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>创建GitHub仓库</strong>: 
+            <p>- 登录GitHub，点击右上角"+"，选择"New repository"</p>
+            <p>- 输入仓库名称(如:chat-app)，选择Public，勾选"Initialize this repository with a README"</p>
+            <p>- 点击"Create repository"</p>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>上传文件到GitHub</strong>:
+            <p>- 在仓库页面，点击"Add file" -> "Upload files"</p>
+            <p>- 将index.html拖放到上传区域</p>
+            <p>- 点击"Commit changes"</p>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">4</span>
+            <strong>启用GitHub Pages</strong>:
+            <p>- 进入仓库的Settings -> Pages</p>
+            <p>- 在"Source"下选择"main"分支和"/root"文件夹</p>
+            <p>- 点击"Save"，等待几分钟后页面会显示你的网站URL</p>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">5</span>
+            <strong>创建后端服务器</strong>:
+            <p>创建一个名为server.js的文件，包含以下代码:</p>
+            <pre>
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// 存储在线用户
+const users = new Map();
+
+// 静态文件服务
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Socket.io连接处理
+io.on('connection', (socket) => {
+  console.log('用户连接:', socket.id);
+  
+  // 用户加入聊天室
+  socket.on('join', (username) => {
+    users.set(socket.id, username);
+    socket.broadcast.emit('user joined', username);
+    io.emit('users', Array.from(users.values()));
+  });
+  
+  // 处理聊天消息
+  socket.on('chat message', (message) => {
+    const username = users.get(socket.id);
+    io.emit('chat message', { user: username, message: message });
+  });
+  
+  // 用户断开连接
+  socket.on('disconnect', () => {
+    const username = users.get(socket.id);
+    if (username) {
+      users.delete(socket.id);
+      socket.broadcast.emit('user left', username);
+      io.emit('users', Array.from(users.values()));
+    }
+    console.log('用户断开:', socket.id);
+  });
+});
+
+// 启动服务器
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`服务器运行在端口 ${PORT}`);
+});
+            </pre>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">6</span>
+            <strong>创建package.json文件</strong>:
+            <p>创建一个名为package.json的文件，包含以下内容:</p>
+            <pre>
+{
+  "name": "chat-app",
+  "version": "1.0.0",
+  "description": "A simple real-time chat application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.1",
+    "socket.io": "^4.5.0"
+  }
+}
+            </pre>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">7</span>
+            <strong>部署到Heroku</strong>:
+            <p>- 注册Heroku账号(heroku.com)</p>
+            <p>- 安装Heroku CLI</p>
+            <p>- 在终端中运行: <code>heroku login</code></p>
+            <p>- 导航到你的项目文件夹</p>
+            <p>- 运行: <code>git init</code></p>
+            <p>- 运行: <code>heroku create your-app-name</code>(替换为你喜欢的名称)</p>
+            <p>- 运行: <code>git add .</code></p>
+            <p>- 运行: <code>git commit -m "Initial commit"</code></p>
+            <p>- 运行: <code>git push heroku main</code></p>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">8</span>
+            <strong>更新前端代码</strong>:
+            <p>- 将index.html中的<code>https://your-heroku-app.herokuapp.com</code>替换为你的Heroku应用URL</p>
+            <p>- 重新上传index.html到GitHub仓库</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script>
+        // DOM元素
+        const loginOverlay = document.getElementById('login-overlay');
+        const usernameInput = document.getElementById('username-input');
+        const joinButton = document.getElementById('join-button');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const messagesContainer = document.getElementById('messages');
+        const usersList = document.getElementById('users-list');
+        const notification = document.getElementById('notification');
+        
+        let socket;
+        let currentUser = '';
+        
+        // 显示通知
+        function showNotification(text) {
+            notification.textContent = text;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 添加消息到聊天窗口
+        function addMessage(sender, text, isMyMessage = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(isMyMessage ? 'my-message' : 'other-message');
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            messageElement.innerHTML = `
+                <div class="message-sender">${sender}</div>
+                <div class="message-text">${text}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // 更新用户列表
+        function updateUsersList(users) {
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const userElement = document.createElement('li');
+                userElement.textContent = user;
+                usersList.appendChild(userElement);
+            });
+        }
+        
+        // 加入聊天室
+        joinButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                currentUser = username;
+                
+                // 连接到服务器
+                socket = io('https://your-heroku-app.herokuapp.com');
+                
+                // 监听连接事件
+                socket.on('connect', () => {
+                    console.log('已连接到服务器');
+                    socket.emit('join', username);
+                    
+                    // 隐藏登录界面
+                    loginOverlay.style.display = 'none';
+                    
+                    // 启用输入框和发送按钮
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    
+                    showNotification('已连接到聊天室');
+                });
+                
+                // 监听用户列表更新
+                socket.on('users', (users) => {
+                    updateUsersList(users);
+                });
+                
+                // 监听新消息
+                socket.on('chat message', (data) => {
+                    addMessage(data.user, data.message);
+                });
+                
+                // 监听用户加入
+                socket.on('user joined', (data) => {
+                    addMessage('系统', `${data} 加入了聊天室`);
+                    showNotification(`${data} 加入了聊天室`);
+                });
+                
+                // 监听用户离开
+                socket.on('user left', (data) => {
+                    addMessage('系统', `${data} 离开了聊天室`);
+                    showNotification(`${data} 离开了聊天室`);
+                });
+                
+                // 监听连接错误
+                socket.on('connect_error', (error) => {
+                    console.error('连接错误:', error);
+                    showNotification('连接失败，请刷新页面重试');
+                });
+            }
+        });
+        
+        // 发送消息
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && socket) {
+                socket.emit('chat message', message);
+                addMessage(currentUser, message, true);
+                messageInput.value = '';
+            }
+        }
+        
+        // 发送按钮点击事件
+        sendButton.addEventListener('click', sendMessage);
+        
+        // 输入框回车事件
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // 初始聚焦到用户名输入框
+        usernameInput.focus();
+    </script>
+</body>
+</html>
