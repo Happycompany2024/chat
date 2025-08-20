@@ -1,0 +1,9 @@
+{
+  "name": "chat-app-functions",
+  "version": "1.0.0",
+  "description": "Netlify functions for chat app",
+  "main": "chat.js",
+  "dependencies": {
+    "socket.io": "^4.5.0"
+  }
+}
